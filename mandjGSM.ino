@@ -4,7 +4,8 @@
 #include <Wire.h>
 
 #define GSM_ATTIVO 1
-#define DEBUG      0
+#define DEBUG      1
+#define I2CADDR   0x08
 
 #if GSM_ATTIVO==1
 
@@ -25,15 +26,16 @@ byte returnMSG = 0;
 String outputString = "";
 boolean stringComplete = false;
 
-#define I2CADDR   0x08
+#if DEBUG==1
 int maxExecute = 10000;
 int previousT = 0;
 int i = 0;
+#endif
 
 void setup() {
 	Wire.begin(I2CADDR);              // join i2c bus with address #8
 	Wire.onReceive(receiveEvent);     // register event
-	//Wire.onRequest(requestEvent);     // register event
+	Wire.onRequest(requestEvent);     // register event
 
 	Serial.begin(9600);           // start serial for output
 	Serial.println("Start SLAVE");
@@ -52,13 +54,15 @@ void setup() {
 }
 
 void loop() {
+
 #if DEBUG==1
-	 int m = millis();
-	 if ((m - previousT) > maxExecute) {
-		 Serial.print(i++);
-		 Serial.println("Funzeca !!!");
-		 previousT = m;
-	 }
+	int m = millis();
+	if ((m - previousT) > maxExecute) {
+		Serial.print(i++);
+		Serial.print("Funzeca !!! - ");
+		Serial.println(returnMSG);
+		previousT = m;
+	}
 #endif
 
 	if (stringComplete) {
@@ -71,18 +75,14 @@ void loop() {
 }
 
 void receiveEvent(int howMany) {
-	/*while (1 < Wire.available()) {
-	 byte c = Wire.read();
-	 Serial.print(c);
-	 inputString += c;
-	 }*/
 	char x = (char) Wire.read();    // receive byte as an integer
 	if (x == '~') {
 #if DEBUG==1
 		Serial.println("s:" + inputString);
 #endif
 		stringComplete = true;
-	} else inputString.concat(x);
+	} else
+		inputString.concat(x);
 }
 
 void chooseAct(String act) {
@@ -93,6 +93,10 @@ void chooseAct(String act) {
 
 	switch (x) {
 	case '1':
+#if GSM_ATTIVO==1
+		if ( gsm.getStatus()== 2 )
+			returnMSG=1;
+#endif
 		Serial.print("Caso 1 ");
 		Serial.println(act);         // print the integer
 		break;
@@ -111,14 +115,17 @@ void chooseAct(String act) {
 		Serial.println(sms_text);
 #endif
 #if GSM_ATTIVO==1
-		if (startedGSM){
+		if (startedGSM) {
 			wdt_disable();
-			sms.SendSMS(phone_number, sms_text);
+			if (sms.SendSMS(phone_number, sms_text))
+				returnMSG=2;
+			else returnMSG=3;
 			wdt_enable(WDTO_8S);
 		}
-	#if DEBUG==1
-		else Serial.println("GMS non attivo.");
-	#endif
+#if DEBUG==1
+		else
+			Serial.println("GMS non attivo.");
+#endif
 #endif
 		break;
 	default:
@@ -130,19 +137,27 @@ void chooseAct(String act) {
 	}
 }
 
-// function that executes whenever data is requested by master
-// this function is registered as an event, see setup()
-/*void requestEvent() {
- switch (returnMSG) {
- case 0:
- Wire.write("KO");
- break;
- case 1:
- Wire.write("OK");
- break;
- }
- // as expected by master
- }*/
+/** function that executes whenever data is requested by master
+ * this function is registered as an event, see setup()
+ *
+ * 0: nulla
+ * 1: gsm READY
+ * 2: sms inviato
+ * 3: sms errore
+ */
+void requestEvent() {
+	Wire.write(returnMSG);
+	returnMSG=0;
+	/*switch (returnMSG) {
+	case 0:
+		Wire.write("KO");
+		break;
+	case 1:
+		Wire.write("OK");
+		break;
+	}*/
+	// as expected by master
+}
 
 /*void serialEvent() {
  while (Serial.available()) {
