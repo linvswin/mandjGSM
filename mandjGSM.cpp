@@ -90,6 +90,15 @@ byte mandjGSM::decodificaComandi() {
 	//else return 9;
 }
 
+void mandjGSM::inviaSMScomando(char *number_str, char *message_str) {
+	wdt_disable();
+	if (sms.SendSMS(this->phone_number, this->sms_text))
+		this->returnMSG = 2;
+	else
+		this->returnMSG = 3;
+	wdt_enable(WDTO_8S);
+}
+
 void mandjGSM::chooseAct(String act) {
 	char x = act.charAt(0);
 
@@ -121,18 +130,34 @@ void mandjGSM::chooseAct(String act) {
 #endif
 #if GSM_ATTIVO==1
 		if (this->startedGSM) {
-			wdt_disable();
-			if (sms.SendSMS(this->phone_number, this->sms_text))
-				this->returnMSG = 2;
-			else
-				this->returnMSG = 3;
-			wdt_enable(WDTO_8S);
+			inviaSMScomando(this->phone_number, this->sms_text);
 		}
 #if MJDEBUG==1
 		else
 			Serial.println("GMS non attivo.");
 #endif
 #endif
+		break;
+	case 3:
+		msg = act.substring(act.lastIndexOf("|") + 1, act.length());
+		msg.toCharArray(sms_text, 160);
+		if (this->startedGSM) {
+
+			if (strcmp(settings.phoneNumber1, "0000000000") != 0)
+				inviaSMScomando(settings.phoneNumber1, sms_text);
+			if (strcmp(settings.phoneNumber2, "0000000000") != 0)
+				inviaSMScomando(settings.phoneNumber2, sms_text);
+			if (strcmp(settings.phoneNumber3, "0000000000") != 0)
+				inviaSMScomando(settings.phoneNumber3, sms_text);
+			if (strcmp(settings.phoneNumber4, "0000000000") != 0)
+				inviaSMScomando(settings.phoneNumber4, sms_text);
+			if (strcmp(settings.phoneNumber5, "0000000000") != 0)
+				inviaSMScomando(settings.phoneNumber5, sms_text);
+
+			wdt_disable();
+
+			wdt_enable(WDTO_8S);
+		}
 		break;
 	default:
 #if MJDEBUG==1

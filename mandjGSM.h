@@ -56,6 +56,7 @@ public:
 	void chooseAct(String act);
 	void leggiSMS();
 	byte decodificaComandi();
+	void mandjGSM::inviaSMScomando(char *number_str, char *message_str);
 
 	byte getReturnMSG();
 	void setReturnMSG(byte in);
