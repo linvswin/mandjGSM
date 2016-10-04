@@ -19,7 +19,6 @@ mandjGSM::~mandjGSM() {
 }
 
 void mandjGSM::inizializza() {
-
 	//this->saveSettings();
 	this->loadSettings();
 }
@@ -28,54 +27,70 @@ void mandjGSM::inizializzaGSM() {
 	if (settings.gsm) {
 		if (gsm.begin(2400)) {
 			Serial.println("\nGSM status=READY");
-			startedGSM = true;
+			this->startedGSM = true;
 		} else {
 			Serial.println("\nGSM status=IDLE");
-			startedGSM = false;
+			this->startedGSM = false;
 		}
 	}
 }
 
 void mandjGSM::leggiSMS() {
-#if GSM_ATTIVO==1
-	this->position = sms.IsSMSPresent(SMS_UNREAD);
-	if (this->position > 0) {
-		// read new SMS
-		sms.GetSMS(this->position, this->phone_number, this->sms_text, 160);
+	if (settings.gsm) {
+		this->position = sms.IsSMSPresent(SMS_UNREAD);
+		if (this->position > 0) {
+			// read new SMS
+			sms.GetSMS(this->position, this->phone_number, this->sms_text, 160);
 
-		int telAutorizzato = 0;
-		char xx[20] = "+39";
-		strcat(xx, settings.phoneNumber1);
+			byte telAutorizzato = 0;
 
-		if (strcmp(this->phone_number, settings.phoneNumber1) != 0)
-			telAutorizzato = 1;
-		else if (strcmp(this->phone_number, settings.phoneNumber2) != 0)
-			telAutorizzato = 2;
-		else if (strcmp(this->phone_number, settings.phoneNumber3) != 0)
-			telAutorizzato = 3;
-		else if (strcmp(this->phone_number, settings.phoneNumber4) != 0)
-			telAutorizzato = 4;
-		else if (strcmp(this->phone_number, settings.phoneNumber5) != 0)
-			telAutorizzato = 5;
+			char xx[20] = "+39";
+			strcat(xx, settings.phoneNumber1);
+			if (strcmp(this->phone_number, xx) == 0)
+				telAutorizzato = 1;
 
-		if (telAutorizzato > 0) {
-			this->returnMSG = this->decodificaComandi();
+			memtozero_v(xx);
+			strcpy(xx, "+39");
+			strcat(xx, settings.phoneNumber2);
+			if (strcmp(this->phone_number, xx) == 0)
+				telAutorizzato = 2;
+
+			memtozero_v(xx);
+			strcpy(xx, "+39");
+			strcat(xx, settings.phoneNumber3);
+			if (strcmp(this->phone_number, xx) == 0)
+				telAutorizzato = 3;
+
+			memtozero_v(xx);
+			strcpy(xx, "+39");
+			strcat(xx, settings.phoneNumber4);
+			if (strcmp(this->phone_number, xx) == 0)
+				telAutorizzato = 4;
+
+			memtozero_v(xx);
+			strcpy(xx, "+39");
+			strcat(xx, settings.phoneNumber5);
+			if (strcmp(this->phone_number, xx) == 0)
+				telAutorizzato = 5;
+
+			if (telAutorizzato > 0) {
+				this->returnMSG = this->decodificaComandi();
+			}
+			sms.DeleteSMS(this->position);
+
+#if MJDEBUG==1
+			Serial.print("Num tel: ");
+			Serial.println(this->phone_number);
+			Serial.print("Text: ");
+			Serial.println(this->sms_text);
+			Serial.print("Auth Tel: ");
+			Serial.println(xx);
+			Serial.print("Auth: ");
+			Serial.println(telAutorizzato);
+#endif
+
 		}
-		sms.DeleteSMS(this->position);
-
-#ifdef MJDEBUG
-		Serial.print("Num tel: ");
-		Serial.println(this->phone_number);
-		Serial.print("Text: ");
-		Serial.println(this->sms_text);
-		Serial.print("Auth Tel: ");
-		Serial.println(xx);
-		Serial.print("Auth: ");
-		Serial.println(telAutorizzato);
-#endif
-
 	}
-#endif
 }
 
 byte mandjGSM::decodificaComandi() {
@@ -87,12 +102,12 @@ byte mandjGSM::decodificaComandi() {
 		return 6;
 	else if (!strcmp(this->sms_text, "STATUS"))
 		return 7;
-	//else return 9;
+	else return 9;
 }
 
 void mandjGSM::inviaSMScomando(char *number_str, char *message_str) {
 	wdt_disable();
-	if (sms.SendSMS(this->phone_number, this->sms_text))
+	if (sms.SendSMS(number_str, this->sms_text))
 		this->returnMSG = 2;
 	else
 		this->returnMSG = 3;
@@ -101,22 +116,21 @@ void mandjGSM::inviaSMScomando(char *number_str, char *message_str) {
 
 void mandjGSM::chooseAct(String act) {
 	char x = act.charAt(0);
-
-	//String num = "";
 	String msg = "";
 
 	switch (x) {
 	case '1':
-#if GSM_ATTIVO==1
-		if (gsm.getStatus() == 2)
-			this->returnMSG = 1;
-#endif
+		if (settings.gsm)
+			if (gsm.getStatus() == 2)
+				this->returnMSG = 1;
+
+#if MJDEBUG==1
 		Serial.print("Caso 1 ");
 		Serial.println(act);         // print the integer
+#endif
 		break;
+
 	case '2':
-		//num = act.substring(2, act.indexOf("|", 2));
-		//if (num != "0")	num.toCharArray(phone_number, 40);
 		msg = act.substring(act.lastIndexOf("|") + 1, act.length());
 		msg.toCharArray(sms_text, 160);
 
@@ -128,37 +142,38 @@ void mandjGSM::chooseAct(String act) {
 		Serial.print("msg: ");
 		Serial.println(this->sms_text);
 #endif
-#if GSM_ATTIVO==1
-		if (this->startedGSM) {
-			inviaSMScomando(this->phone_number, this->sms_text);
+
+		if (settings.gsm) {
+			if (this->startedGSM) {
+				inviaSMScomando(this->phone_number, this->sms_text);
+			}
 		}
+
 #if MJDEBUG==1
 		else
 			Serial.println("GMS non attivo.");
 #endif
-#endif
 		break;
-	case 3:
+
+	case '3':
 		msg = act.substring(act.lastIndexOf("|") + 1, act.length());
 		msg.toCharArray(sms_text, 160);
-		if (this->startedGSM) {
-
-			if (strcmp(settings.phoneNumber1, "0000000000") != 0)
-				inviaSMScomando(settings.phoneNumber1, sms_text);
-			if (strcmp(settings.phoneNumber2, "0000000000") != 0)
-				inviaSMScomando(settings.phoneNumber2, sms_text);
-			if (strcmp(settings.phoneNumber3, "0000000000") != 0)
-				inviaSMScomando(settings.phoneNumber3, sms_text);
-			if (strcmp(settings.phoneNumber4, "0000000000") != 0)
-				inviaSMScomando(settings.phoneNumber4, sms_text);
-			if (strcmp(settings.phoneNumber5, "0000000000") != 0)
-				inviaSMScomando(settings.phoneNumber5, sms_text);
-
-			wdt_disable();
-
-			wdt_enable(WDTO_8S);
+		if (settings.gsm) {
+			if (this->startedGSM) {
+				if (strcmp(settings.phoneNumber1, "0000000000") != 0)
+					inviaSMScomando(settings.phoneNumber1, sms_text);
+				if (strcmp(settings.phoneNumber2, "0000000000") != 0)
+					inviaSMScomando(settings.phoneNumber2, sms_text);
+				if (strcmp(settings.phoneNumber3, "0000000000") != 0)
+					inviaSMScomando(settings.phoneNumber3, sms_text);
+				if (strcmp(settings.phoneNumber4, "0000000000") != 0)
+					inviaSMScomando(settings.phoneNumber4, sms_text);
+				if (strcmp(settings.phoneNumber5, "0000000000") != 0)
+					inviaSMScomando(settings.phoneNumber5, sms_text);
+			}
 		}
 		break;
+
 	default:
 #if MJDEBUG==1
 		Serial.print("default: ");
@@ -238,9 +253,12 @@ void setup() {
 #endif
 
 	mjGSM.inizializza();
-	mjGSM.inizializzaGSM();
+	if (settings.gsm)
+		mjGSM.inizializzaGSM();
 
-#ifdef MJDEBUG
+#if MJDEBUG==1
+	Serial.print("GSM:");
+	Serial.println(settings.gsm);
 	Serial.print("Tel1:");
 	Serial.println(settings.phoneNumber1);
 	Serial.print("Tel2:");

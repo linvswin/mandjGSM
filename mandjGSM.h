@@ -17,9 +17,13 @@
 #include <SoftwareSerial.h>
 #include "sms.h"
 
-#define GSM_ATTIVO   1
-#define MJDEBUG      1
+//#define GSM_ATTIVO   1
+#define MJDEBUG      0
 #define I2CADDR   0x08
+
+// azzera variabili
+#define memtozero_s(var) var ^= var;
+#define memtozero_v(var) memset((void*)&var,0,sizeof(var));
 
 struct GSMSettings {
 	uint8_t gsm;			// attiva gms
