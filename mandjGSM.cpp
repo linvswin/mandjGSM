@@ -123,6 +123,7 @@ void mandjGSM::chooseAct(String act) {
 		if (settings.gsm)
 			if (gsm.getStatus() == 2)
 				this->returnMSG = 1;
+			else
 
 #if MJDEBUG==1
 		Serial.print("Caso 1 ");
@@ -235,7 +236,11 @@ void receiveEvent(int howMany) {
  * 2: sms inviato
  * 3: sms errore
  * 4: richiede lo stato dell'allarme
- *
+ * 5:
+ * 6:
+ * 7:
+ * 8:
+ * 9:
  **/
 void requestEvent() {
 	Wire.write(mjGSM.getReturnMSG());
