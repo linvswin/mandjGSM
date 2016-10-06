@@ -74,7 +74,7 @@ void mandjGSM::leggiSMS() {
 				telAutorizzato = 5;
 
 			if (telAutorizzato > 0) {
-				this->returnMSG = this->decodificaComandi();
+				this->returnMSG = this->decodificaComandiSMS();
 			}
 			sms.DeleteSMS(this->position);
 
@@ -93,7 +93,7 @@ void mandjGSM::leggiSMS() {
 	}
 }
 
-byte mandjGSM::decodificaComandi() {
+byte mandjGSM::decodificaComandiSMS() {
 	if (!strcmp(this->sms_text, "ATTIVA"))
 		return 4;
 	else if (!strcmp(this->sms_text, "DISATTIVA"))
@@ -117,6 +117,7 @@ void mandjGSM::inviaSMScomando(char *number_str, char *message_str) {
 void mandjGSM::chooseAct(String act) {
 	char x = act.charAt(0);
 	String msg = "";
+	int startLen=2;
 
 	switch (x) {
 	case '1':
@@ -175,6 +176,33 @@ void mandjGSM::chooseAct(String act) {
 		}
 		break;
 
+	case '4':
+
+		msg = act.substring(startLen, act.indexOf(",",startLen) );
+		settings.gsm=msg.toInt();
+
+		startLen += msg.length()+1;
+		msg = act.substring(startLen, act.indexOf(",",startLen) );
+		msg.toCharArray(settings.phoneNumber1, sizeof(settings.phoneNumber1));
+
+		startLen += msg.length()+1;
+		msg = act.substring(startLen, act.indexOf(",",startLen) );
+		msg.toCharArray(settings.phoneNumber2, sizeof(settings.phoneNumber2));
+
+		startLen += msg.length()+1;
+		msg = act.substring(startLen, act.indexOf(",",startLen) );
+		msg.toCharArray(settings.phoneNumber3, sizeof(settings.phoneNumber3));
+
+		startLen += msg.length()+1;
+		msg = act.substring(startLen, act.indexOf(",",startLen) );
+		msg.toCharArray(settings.phoneNumber4, sizeof(settings.phoneNumber4));
+
+		startLen += msg.length()+1;
+		msg = act.substring(startLen, act.indexOf(",",startLen) );
+		msg.toCharArray(settings.phoneNumber5, sizeof(settings.phoneNumber5));
+
+		this->saveSettings();
+		break;
 	default:
 #if MJDEBUG==1
 		Serial.print("default: ");

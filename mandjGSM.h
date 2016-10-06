@@ -18,7 +18,7 @@
 #include "sms.h"
 
 //#define GSM_ATTIVO   1
-#define MJDEBUG      0
+#define MJDEBUG      1
 #define I2CADDR   0x08
 
 // azzera variabili
@@ -59,8 +59,8 @@ public:
 	void inizializzaGSM();
 	void chooseAct(String act);
 	void leggiSMS();
-	byte decodificaComandi();
-	void mandjGSM::inviaSMScomando(char *number_str, char *message_str);
+	byte decodificaComandiSMS();
+	void inviaSMScomando(char *number_str, char *message_str);
 
 	byte getReturnMSG();
 	void setReturnMSG(byte in);
