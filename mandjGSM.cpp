@@ -21,6 +21,7 @@ mandjGSM::~mandjGSM() {
 void mandjGSM::inizializza() {
 	//this->saveSettings();
 	this->loadSettings();
+	this->inizializzaGSM();
 }
 
 void mandjGSM::inizializzaGSM() {
@@ -122,9 +123,11 @@ void mandjGSM::chooseAct(String act) {
 	switch (x) {
 	case '1':
 		if (settings.gsm)
+		{
 			if (gsm.getStatus() == 2)
 				this->returnMSG = 1;
-			else
+			else this->returnMSG = 9;
+		}
 
 #if MJDEBUG==1
 		Serial.print("Caso 1 ");
@@ -177,9 +180,10 @@ void mandjGSM::chooseAct(String act) {
 		break;
 
 	case '4':
-
 		msg = act.substring(startLen, act.indexOf(",",startLen) );
 		settings.gsm=msg.toInt();
+		//Serial.print("msg.gsm: ");
+		Serial.println(settings.gsm);
 
 		startLen += msg.length()+1;
 		msg = act.substring(startLen, act.indexOf(",",startLen) );
@@ -202,6 +206,12 @@ void mandjGSM::chooseAct(String act) {
 		msg.toCharArray(settings.phoneNumber5, sizeof(settings.phoneNumber5));
 
 		this->saveSettings();
+		if (settings.gsm==1)
+		{
+			wdt_disable();
+			this->inizializzaGSM();
+			wdt_enable(WDTO_8S);
+		}
 		break;
 	default:
 #if MJDEBUG==1
@@ -268,7 +278,7 @@ void receiveEvent(int howMany) {
  * 6:
  * 7:
  * 8:
- * 9:
+ * 9: gsm NOREADY
  **/
 void requestEvent() {
 	Wire.write(mjGSM.getReturnMSG());
@@ -286,8 +296,6 @@ void setup() {
 #endif
 
 	mjGSM.inizializza();
-	if (settings.gsm)
-		mjGSM.inizializzaGSM();
 
 #if MJDEBUG==1
 	Serial.print("GSM:");

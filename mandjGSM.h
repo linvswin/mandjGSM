@@ -33,7 +33,7 @@ struct GSMSettings {
 	char phoneNumber4[20]; // array for the phone number string
 	char phoneNumber5[20]; // array for the phone number string
 } settings = {
-	1,				// gsm
+	0,				// gsm
 	"0000000000",	// phoneNumber1
 	"0000000000",	// phoneNumber2
 	"0000000000",	// phoneNumber3
