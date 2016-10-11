@@ -182,8 +182,6 @@ void mandjGSM::chooseAct(String act) {
 	case '4':
 		msg = act.substring(startLen, act.indexOf(",",startLen) );
 		settings.gsm=msg.toInt();
-		//Serial.print("msg.gsm: ");
-		Serial.println(settings.gsm);
 
 		startLen += msg.length()+1;
 		msg = act.substring(startLen, act.indexOf(",",startLen) );
@@ -204,6 +202,12 @@ void mandjGSM::chooseAct(String act) {
 		startLen += msg.length()+1;
 		msg = act.substring(startLen, act.indexOf(",",startLen) );
 		msg.toCharArray(settings.phoneNumber5, sizeof(settings.phoneNumber5));
+		Serial.println(settings.gsm);
+		Serial.println(settings.phoneNumber1);
+		Serial.println(settings.phoneNumber2);
+		Serial.println(settings.phoneNumber3);
+		Serial.println(settings.phoneNumber4);
+		Serial.println(settings.phoneNumber5);
 
 		this->saveSettings();
 		if (settings.gsm==1)
@@ -231,14 +235,15 @@ void mandjGSM::setReturnMSG(byte in) {
 }
 
 void mandjGSM::saveSettings(void) {
+	Serial.println("Salvo EPROM");
 	byte* p = (byte*) &settings;
-	for (int i = 1; i < sizeof(GSMSettings); i++)
+	for (int i = 0; i < sizeof(GSMSettings); i++)
 		EEPROM.write(i, p[i]);
 }
 
 void mandjGSM::loadSettings(void) {
 	byte* p = (byte*) &settings;
-	for (int i = 1; i < sizeof(GSMSettings); i++)
+	for (int i = 0; i < sizeof(GSMSettings); i++)
 		p[i] = EEPROM.read(i);
 }
 

@@ -38,7 +38,7 @@ struct GSMSettings {
 	"0000000000",	// phoneNumber2
 	"0000000000",	// phoneNumber3
 	"0000000000",	// phoneNumber4
-	"0000000000"	// phoneNumber5;
+	"0000000000",	// phoneNumber5;
 };
 
 class mandjGSM {
