@@ -10,10 +10,15 @@
 
 #include "Arduino.h"
 #include <Wire.h>
+#include <avr/io.h>
 #include <avr/wdt.h>
 #include <EEPROM.h>
 
 #include "SIM900.h"
+
+//#define _GSM_TXPIN_ 3
+//#define _GSM_RXPIN_ 2
+
 #include <SoftwareSerial.h>
 #include "sms.h"
 
@@ -24,6 +29,10 @@
 // azzera variabili
 #define memtozero_s(var) var ^= var;
 #define memtozero_v(var) memset((void*)&var,0,sizeof(var));
+
+
+// software reset
+#define Reset_AVR() wdt_enable(WDTO_30MS); while(1) {}
 
 struct GSMSettings {
 	uint8_t gsm;			// attiva gms

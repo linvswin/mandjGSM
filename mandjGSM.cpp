@@ -115,6 +115,19 @@ void mandjGSM::inviaSMScomando(char *number_str, char *message_str) {
 	wdt_enable(WDTO_8S);
 }
 
+
+/**
+ * 0: nulla
+ * 1: richiede lo stato dell'allarme
+ * 2: invia sms di risposta al comando
+ * 3: allarme scattato invia sms ai tel abilitati
+ * 4: sync impostazioni gsm
+ * 5:
+ * 6:
+ * 7:
+ * 8:
+ * 9: riavvia modulo
+ **/
 void mandjGSM::chooseAct(String act) {
 	char x = act.charAt(0);
 	String msg = "";
@@ -202,13 +215,14 @@ void mandjGSM::chooseAct(String act) {
 		startLen += msg.length()+1;
 		msg = act.substring(startLen, act.indexOf(",",startLen) );
 		msg.toCharArray(settings.phoneNumber5, sizeof(settings.phoneNumber5));
+#if MJDEBUG==1
 		Serial.println(settings.gsm);
 		Serial.println(settings.phoneNumber1);
 		Serial.println(settings.phoneNumber2);
 		Serial.println(settings.phoneNumber3);
 		Serial.println(settings.phoneNumber4);
 		Serial.println(settings.phoneNumber5);
-
+#endif
 		this->saveSettings();
 		if (settings.gsm==1)
 		{
@@ -216,6 +230,10 @@ void mandjGSM::chooseAct(String act) {
 			this->inizializzaGSM();
 			wdt_enable(WDTO_8S);
 		}
+		break;
+
+	case '9':
+		Reset_AVR();
 		break;
 	default:
 #if MJDEBUG==1
