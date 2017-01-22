@@ -23,7 +23,7 @@
 #include "sms.h"
 
 //#define GSM_ATTIVO   1
-#define MJDEBUG      1
+//#define MJDEBUG      1
 #define I2CADDR   0x08
 
 // azzera variabili
